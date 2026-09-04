@@ -40,10 +40,13 @@ jobs:
       - name: בדיקת שפיות לפלט הבנייה
         run: |
           set -e
-          for f in index.html 404.html sw.js manifest.webmanifest .nojekyll; do
-            test -s "dist/$f" || { echo "חסר קובץ: $f"; exit 1; }
+          for f in index.html 404.html sw.js manifest.webmanifest; do
+            test -s "dist/$f" || { echo "חסר או ריק: $f"; exit 1; }
           done
+          # .nojekyll הוא קובץ ריק בכוונה, ולכן נבדק רק קיומו
+          test -f dist/.nojekyll || { echo "חסר: .nojekyll"; exit 1; }
           test "$(find dist/demos -name '*.jpg' | wc -l)" -eq 122
+          grep -q '"/-/_expo' dist/index.html || { echo "נתיב הבסיס לא הוטמע"; exit 1; }
           echo "פלט הבנייה תקין"
 
       - name: דחיפה לענף gh-pages
