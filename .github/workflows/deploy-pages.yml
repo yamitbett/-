@@ -1,0 +1,65 @@
+# בונה את גרסת ה-PWA ודוחף אותה לענף gh-pages, ש-GitHub Pages מגיש ממנו.
+#
+# בכוונה לא משתמשים כאן ב-actions/deploy-pages: הפריסה דרכו עוברת דרך
+# environment בשם github-pages שמוגן בכללי ענפים, ולכן נכשלה. דחיפה
+# לענף gh-pages עובדת בלי תלות בהגדרות האלה.
+name: Deploy PWA to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - claude/mobile-app-training-videos-0s2j8m
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: התקנת תלויות
+        run: npm ci
+
+      - name: בניית ה-PWA
+        # שם הריפו הוא גם נתיב הבסיס שבו Pages מגיש את האתר
+        run: node scripts/build-pwa.js --base "/${GITHUB_REPOSITORY#*/}"
+
+      - name: בדיקת שפיות לפלט הבנייה
+        run: |
+          set -e
+          for f in index.html 404.html sw.js manifest.webmanifest; do
+            test -s "dist/$f" || { echo "חסר או ריק: $f"; exit 1; }
+          done
+          # .nojekyll הוא קובץ ריק בכוונה, ולכן נבדק רק קיומו
+          test -f dist/.nojekyll || { echo "חסר: .nojekyll"; exit 1; }
+          test "$(find dist/demos -name '*.jpg' | wc -l)" -eq 122
+          grep -q '"/-/_expo' dist/index.html || { echo "נתיב הבסיס לא הוטמע"; exit 1; }
+          echo "פלט הבנייה תקין"
+
+      - name: דחיפה לענף gh-pages
+        run: |
+          set -e
+          cd dist
+          git init -q
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "deploy: אתר FitBuddy מ-${GITHUB_SHA::7}"
+          git push -q --force \
+            "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+            HEAD:gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
