@@ -109,3 +109,12 @@ writePng(path.join(out, 'icon.png'), 1024, 1024, render(1024));
 writePng(path.join(out, 'adaptive-icon.png'), 1024, 1024, render(1024, { transparentBg: true, scale: 0.72 }));
 writePng(path.join(out, 'splash.png'), 1024, 1024, render(1024, { scale: 0.75 }));
 writePng(path.join(out, 'favicon.png'), 64, 64, render(64));
+
+// אייקונים לגרסת ה-PWA (הוספה למסך הבית בטלפון)
+const web = path.join(__dirname, '..', 'web-assets', 'icons');
+writePng(path.join(web, 'icon-192.png'), 192, 192, render(192));
+writePng(path.join(web, 'icon-512.png'), 512, 512, render(512));
+// אייקון מסכה לאנדרואיד – צריך שוליים כדי שלא ייחתך בעיגול
+writePng(path.join(web, 'icon-maskable-512.png'), 512, 512, render(512, { scale: 0.62 }));
+// iOS לא מעגל את הפינות בעצמו כשהאייקון שקוף, ולכן רקע מלא
+writePng(path.join(web, 'apple-touch-icon.png'), 180, 180, render(180));

@@ -8,7 +8,9 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:pwa": "node scripts/build-pwa.js",
+    "assets": "node scripts/make-assets.js"
   },
   "dependencies": {
     "@expo/metro-runtime": "^57.0.15",
